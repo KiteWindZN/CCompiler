@@ -7,3 +7,4 @@ int 123a=60;
 double acb=123.456;
 float f=1.2.3;
 string str="OK";
+int aaa=12;
