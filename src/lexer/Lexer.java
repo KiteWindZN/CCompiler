@@ -50,7 +50,10 @@ public class Lexer {
 		reserve(new Word(Tag.SIZEOF, "sizeof"));
 		reserve(new Word(Tag.TYPEOF, "typeof"));
 		reserve(new Word(Tag.INCLUDE, "include"));
-
+		reserve(new Word(Tag.STATIC, "static"));
+		reserve(new Word(Tag.FINAL, "final"));
+		reserve(new Word(Tag.CONST, "const"));
+		
 		seperatorList.add(',');
 		seperatorList.add(';');
 		seperatorList.add('=');

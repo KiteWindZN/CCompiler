@@ -43,4 +43,9 @@ public class Tag {
 	public final static int EXPLAIN1=291;
 	public final static int EXPLAIN2START=292;
 	public final static int EXPLAIN2END=293;
+	
+	public final static int STATIC=291;
+	public final static int FINAL=292;
+	public final static int CONST=293;
+	
 }
