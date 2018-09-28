@@ -20,8 +20,8 @@ public class ReadFile {
 	public byte[] getNextBatch() throws IOException{
 		byte[] batch=new byte[batchSize];
 		if(raf.read(batch)!=-1){
-			for(int i=0;i<batchSize;i++)
-			System.out.print((char)batch[i]);
+			//for(int i=0;i<batchSize;i++)
+			//System.out.print((char)batch[i]);
 			return batch;
 		}
 		return null;
@@ -31,6 +31,6 @@ public class ReadFile {
 		ReadFile myObj=new ReadFile("program.c",100);
 		byte[] batch=myObj.getNextBatch();
 		batch=myObj.getNextBatch();
-		
+		System.out.println("success");
 	}
 }
