@@ -6,4 +6,11 @@ public class Decimal extends myToken{
 		super(Tag.Decimal);
 		value=value2;
 	}
+	public float getValue() {
+		return value;
+	}
+	public void setValue(float value) {
+		this.value = value;
+	}
+	
 }

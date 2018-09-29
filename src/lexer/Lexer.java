@@ -9,7 +9,7 @@ import java.util.Map;
 public class Lexer {
 
 	private Map<String, Word> words = new HashMap<String, Word>();
-	List<Character> seperatorList = new ArrayList<Character>();
+	List<Character> separatorList = new ArrayList<Character>();
 	int batchSize = 4096;
 	byte[] cacheZone1;
 	byte[] cacheZone2;
@@ -24,7 +24,7 @@ public class Lexer {
 		words.put(t.lexeme, t);
 	}
 
-	public Lexer() throws IOException {
+	public Lexer(String file,int batch) throws IOException {
 		reserve(new Word(Tag.TRUE, "true"));
 		reserve(new Word(Tag.FALSE, "false"));
 		reserve(new Word(Tag.INT, "int"));
@@ -54,26 +54,29 @@ public class Lexer {
 		reserve(new Word(Tag.FINAL, "final"));
 		reserve(new Word(Tag.CONST, "const"));
 		
-		seperatorList.add(',');
-		seperatorList.add(';');
-		seperatorList.add('=');
-		seperatorList.add('<');
-		seperatorList.add('>');
-		seperatorList.add('!');
-		seperatorList.add('&');
-		seperatorList.add('|');
-		seperatorList.add('(');
-		seperatorList.add(')');
-		seperatorList.add('[');
-		seperatorList.add(']');
-		seperatorList.add('{');
-		seperatorList.add('}');
-		seperatorList.add('+');
-		seperatorList.add('-');
-		seperatorList.add('*');
-		seperatorList.add('/');
-		seperatorList.add('%');
+		//another method: if a character is not a digit or a letter, it is a separatorChar.
+		separatorList.add(',');
+		separatorList.add(';');
+		separatorList.add('=');
+		separatorList.add('<');
+		separatorList.add('>');
+		separatorList.add('!');
+		separatorList.add('&');
+		separatorList.add('|');
+		separatorList.add('(');
+		separatorList.add(')');
+		separatorList.add('[');
+		separatorList.add(']');
+		separatorList.add('{');
+		separatorList.add('}');
+		separatorList.add('+');
+		separatorList.add('-');
+		separatorList.add('*');
+		separatorList.add('/');
+		separatorList.add('%');
 
+		this.fileName=file;
+		this.batchSize=batch;
 		readFile = new ReadFile(fileName, batchSize);
 	}
 
@@ -93,8 +96,9 @@ public class Lexer {
 		
 		
 		byte peek=getNextChar();
+		if(peek==0)
+			return null;
 		while((char)peek==' '||(char)peek=='\t'||(char)peek=='\n'){
-			index++;
 			col++;
 			if((char)peek=='\n'){
 				row++;
@@ -107,7 +111,9 @@ public class Lexer {
 			int pointNum=0;
 			float value=0;
 			float decimal=0.1f;
-			while(seperatorList.indexOf(peek)!=-1){
+			String strNum="";
+			while((peek>='A'&&peek<='Z')||(peek>='a'&&peek<='z')||(peek>='0'&&peek<='9')||peek=='.'||peek=='_'){
+				strNum+=(char)peek;
 				if(peek==0)
 				    return null;
 				if(peek=='\n'){
@@ -127,12 +133,16 @@ public class Lexer {
 				    	    value=value+(peek-'0')*decimal;
 				    	    decimal*=0.1;
 				    }
-				    index++;
+				   
 					col++;
+					peek=getNextChar();
+				}else{
+					pointNum=5;
 					peek=getNextChar();
 				}
 				
 			}
+			index--;
 			if(pointNum==0){
 				Num num=new Num((int)value);
 				return num;
@@ -140,30 +150,31 @@ public class Lexer {
 				Decimal deObj=new Decimal(value);
 				return deObj;
 			}else{//error Num
-				String errorMsg="wrong Number";
+				String errorMsg=strNum+" : wrong Number";
 				processError(row,startCol,errorMsg);
-				myToken nextToken=new myToken(1);
+				myToken nextToken=new myToken(0);
 				return nextToken;
 			}
+			
 		}else if((peek>='A'&&peek<='Z')||(peek>='a'&&peek<='z')||peek=='_'){//ID or keyWord
 			String value="";
 			int flag=1;
-			while(seperatorList.indexOf(peek)!=-1){
+			while((peek>='A'&&peek<='Z')||(peek>='a'&&peek<='z')||peek=='_'||(peek>='0'&&peek<='9')||peek=='.'){
 				if(peek==0)
 					return null;
 				if(peek=='\n'){
 					row++;
 					col=0;
 				}
-				if((peek>='A'&&peek<='Z')||(peek>='a'&&peek<='z')||peek=='_'){
+				if((peek>='A'&&peek<='Z')||(peek>='a'&&peek<='z')||(peek>='0'&&peek<='9')||peek=='_'){
 					;
 				}else flag=0;
-				value+=peek;
-				index++;
+				value+=(char)peek;
+				
 				col++;
 				peek=getNextChar();
 			}
-			
+			index--;
 			if(flag==1){
 				Word word=words.get(value);
 				if(word!=null)
@@ -176,13 +187,17 @@ public class Lexer {
 				myToken nextToken=new myToken(1);
 				return nextToken;
 			}
+			
 		}else {
+			col++;
 			myToken tokenObj;
 			Word myWord;
+			byte nextC;
 			switch(peek){
 			case '+':
-				peek=getNextChar();
-				if(peek=='+'){
+				nextC=getNextChar();
+				if(nextC=='+'){
+					
 					col++;
 					myWord=new Word(Tag.INCREASE,"++");
 					return myWord;
@@ -193,8 +208,8 @@ public class Lexer {
 				}
 				
 			case '-':
-				peek=getNextChar();
-				if(peek=='-'){
+				nextC=getNextChar();
+				if(nextC=='-'){
 					col++;
 					myWord=new Word(Tag.DECREASE,"--");
 					return myWord;
@@ -207,16 +222,16 @@ public class Lexer {
 				tokenObj=new myToken(peek);
 				return tokenObj;
 			case '/'://除法或者注释的开头
-				peek=getNextChar();
-				if(peek=='/'){
-					while(peek!='\n'){
-						peek=getNextChar();
+				nextC=getNextChar();
+				if(nextC=='/'){
+					while(nextC!='\n'){
+						nextC=getNextChar();
 					}
 					tokenObj=new myToken(0);
 					return tokenObj;
-				}else if(peek=='*'){
+				}else if(nextC=='*'){
 					peek=getNextChar();
-					byte nextC=getNextChar();
+					nextC=getNextChar();
 					while(peek!=0&&(peek!='*'||nextC!='/')){
 						peek=nextC;
 						nextC=getNextChar();
@@ -251,8 +266,8 @@ public class Lexer {
 				tokenObj=new myToken(peek);
 				return tokenObj;
 			case '&':
-				peek=getNextChar();
-				if(peek=='&'){
+				nextC=getNextChar();
+				if(nextC=='&'){
 					col++;
 					myWord=new Word(Tag.AND,"&&");
 					return myWord;
@@ -262,8 +277,8 @@ public class Lexer {
 					return tokenObj;
 				}
 			case '|':
-				peek=getNextChar();
-				if(peek=='|'){
+				nextC=getNextChar();
+				if(nextC=='|'){
 					col++;
 					myWord=new Word(Tag.OR,"||");
 					return myWord;
@@ -273,8 +288,8 @@ public class Lexer {
 					return tokenObj;
 				}
 			case '!':
-				peek=getNextChar();
-				if(peek=='='){
+				nextC=getNextChar();
+				if(nextC=='='){
 					col++;
 					myWord=new Word(Tag.NOTEQUAL,"!=");
 					return myWord;
@@ -284,8 +299,8 @@ public class Lexer {
 					return tokenObj;
 				}
 			case '=':
-				peek=getNextChar();
-				if(peek=='='){
+				nextC=getNextChar();
+				if(nextC=='='){
 					col++;
 					myWord=new Word(Tag.EQUAL,"==");
 					return myWord;
@@ -298,8 +313,8 @@ public class Lexer {
 				tokenObj=new myToken(peek);
 				return tokenObj;
 			case '<':
-				peek=getNextChar();
-				if(peek=='='){
+				nextC=getNextChar();
+				if(nextC=='='){
 					col++;
 					myWord=new Word(Tag.NOTBIGGER,"<=");
 					return myWord;
@@ -310,8 +325,8 @@ public class Lexer {
 				}
 				
 			case '>':
-				peek=getNextChar();
-				if(peek=='='){
+				nextC=getNextChar();
+				if(nextC=='='){
 					col++;
 					myWord=new Word(Tag.NOTSMALLER,">=");
 					return myWord;
@@ -325,18 +340,22 @@ public class Lexer {
 				String value="";
 				peek=getNextChar();
 				while(peek!=0&&peek!='\"'){
-					value+=peek;
+					if(peek=='\\'){
+						peek=getNextChar();
+					}
+					value+=(char)peek;
+					peek=getNextChar();
 				}
 				
 				Cstring cstring=new Cstring(value);
 				return cstring;
 			case '\'':
-				peek=getNextChar();
-				if(peek=='\\')
-					peek=getNextChar();
+				nextC=getNextChar();
+				if(nextC=='\\')
+					nextC=getNextChar();
 				byte nextChar=getNextChar();
 				if(nextChar=='\''){
-					Cchar cchar=new Cchar((char)peek);
+					Cchar cchar=new Cchar((char)nextC);
 					return cchar;
 				}else {
 					while(nextChar!='\'')
@@ -355,6 +374,7 @@ public class Lexer {
 			default:
 				String errorMsg=peek+" : this character is not valid";
 				processError(row,col,errorMsg);
+				
 				break;
 			}
 		}
@@ -366,12 +386,10 @@ public class Lexer {
 	
 	public byte getNextChar() throws IOException{
 		byte peek=0;
-		if(index==4096||peek==0){//the end of cacheZone
-			if(index==4096){
-				loadCache();
-			}else{//end of File
-				return peek;
-			}
+		if(cacheNum==0){
+			loadCache();
+		}else if(index==batchSize){//the end of cacheZone
+			loadCache();
 		}
 		
 		if(cacheNum==2){
@@ -389,10 +407,7 @@ public class Lexer {
 	
 	//回退至上一个字符
 	 public void rebackPreChar(){
-		 if(index==0){
-		 }else{
-			 index--;
-		 }
+		 index--;//extremely strange
 	 }
 	//error
 	public void processError(int rowNum,int colNum,String errorMsg){

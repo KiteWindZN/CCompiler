@@ -6,4 +6,8 @@ public class Num extends myToken {
 		super(Tag.NUM);
 		value=v;
 	}
+	public int getValue() {
+		return value;
+	}
+	
 }

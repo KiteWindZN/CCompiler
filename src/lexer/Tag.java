@@ -1,11 +1,7 @@
 package lexer;
 
 public class Tag {
-	public final static int CCHAR=253;
-	public final static int CSTRING=254;
-	public final static int Decimal=255;
-	public final static int NUM=256;
-	public final static int ID=257;
+	
 	public final static int TRUE=258;
 	public final static int FALSE=259;
 	public final static int INT=260;
@@ -44,8 +40,14 @@ public class Tag {
 	public final static int EXPLAIN2START=292;
 	public final static int EXPLAIN2END=293;
 	
-	public final static int STATIC=291;
-	public final static int FINAL=292;
-	public final static int CONST=293;
+	public final static int STATIC=294;
+	public final static int FINAL=295;
+	public final static int CONST=296;
+	public final static int ID=297;
+	
+	public final static int NUM=310;
+	public final static int Decimal=311;
+	public final static int CSTRING=312;
+	public final static int CCHAR=313;
 	
 }

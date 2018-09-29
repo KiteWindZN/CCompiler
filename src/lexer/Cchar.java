@@ -6,4 +6,12 @@ public class Cchar extends myToken{
 		super(Tag.CCHAR);
 		value=val;
 	}
+	public char getValue() {
+		return value;
+	}
+	public void setValue(char value) {
+		this.value = value;
+	}
+	
+	
 }

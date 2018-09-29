@@ -1,10 +1,14 @@
-#include<stdio>
-//张楠的代码
-int a=10;
-int b=20;
-int c=a+b;
-int 123a=60;
-double acb=123.456;
-float f=1.2.3;
+
 string str="OK";
-int aaa=12;
+char c='\'';
+char a='aaa';
+string 123a="\'a";
+int aaa=12;// asdfdsfsdg
+int aaa=14;/*fdgf* /
+fdsf
+fdsg
+*/string str1="yes";
+int b=12;
+if(a==30){
+   a++;
+}
