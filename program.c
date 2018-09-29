@@ -11,4 +11,4 @@ fdsg
 int b=12;
 if(a==30){
    a++;
-}
+}else a--;
