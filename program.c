@@ -13,3 +13,4 @@ if(a==30){
    a++;
 }else a--;
 a--;
+int array[10];
