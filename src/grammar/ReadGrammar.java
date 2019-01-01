@@ -8,13 +8,15 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ReadGrammar {
     Set<String> nonT=new HashSet<String>(); //非终结符
-    List<GrammarStruct> grammarSet=new ArrayList<GrammarStruct>();
+    Map<String,GrammarStruct> grammarMap=new HashMap<String,GrammarStruct>();
     
 	public void readFromFile(String fileName) throws IOException{
 		
@@ -30,7 +32,7 @@ public class ReadGrammar {
 				right.add(rightStrs[i]);
 			}
 			g.right=right;
-			grammarSet.add(g);
+			grammarMap.put(g.left, g);
 			line=bf.readLine();
 			nonT.add(strs[0]);//所有的非终结符都出现在文法的左侧
 		}
