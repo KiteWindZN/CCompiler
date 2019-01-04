@@ -16,11 +16,12 @@ import java.util.Set;
 
 public class GrammarAnalysis {
 
-	Map<String, Map<String, GrammarStruct>> mTable = new HashMap<String, Map<String, GrammarStruct>>();
+	Map<MtableKey, GrammarSingle> mTable = new HashMap<MtableKey, GrammarSingle>();
 	Map<String, List<String>> firstSet = new HashMap<String, List<String>>();
 	Map<String, List<String>> followSet = new HashMap<String, List<String>>();
 	Map<String, GrammarStruct> grammarMap = new HashMap<String, GrammarStruct>();
-	Set<String> nonT = new HashSet<String>();
+	Set<String> nonT = new HashSet<String>();// 非终结符集合
+	// Set<String> T=new HashSet<String>();//终结符集合
 
 	GrammarAnalysis(String fileName) throws IOException {
 		ReadGrammar readGrammar = new ReadGrammar();
@@ -98,7 +99,7 @@ public class GrammarAnalysis {
 			}
 			gsii.right = gsiiRight;
 			grammarMap.put(Vii, gsii);
-			//将新产生的非终结符加入非终结符集合nonT
+			// 将新产生的非终结符加入非终结符集合nonT
 			nonT.add(Vii);
 		}
 	}
@@ -116,42 +117,44 @@ public class GrammarAnalysis {
 			for (String V : nonT) {
 				GrammarStruct gs = grammarMap.get(V);
 				List<String> gsRight = gs.right;
-				int startLength=firstSet.get(V).size();
-				
+				int startLength = firstSet.get(V).size();
+
 				for (int i = 0; i < gsRight.size(); i++) {
 					String str = gsRight.get(i);
 					String[] strs = str.split(" ");
 					if (!nonT.contains(strs[0])) {
 						firstSet.get(V).add(strs[0]);
+						continue;
 					} else {
-						int flag1=0;
+						int flag1 = 0;
 						for (int j = 0; j < strs.length; j++) {
-							
+
 							String tmpS = strs[j];
-							if(!nonT.contains(tmpS)){
-								flag1=1;
+							if (!nonT.contains(tmpS)) {
+								firstSet.get(V).add(tmpS);// 之前的非终结符都含有空值@
+								flag1 = 1;
 								break;
 							}
-							//@代表空值
-							if(firstSet.get(tmpS).contains("@")){
-								for(String s:firstSet.get(tmpS)){
-									if(s.equals("@"))
+							// @代表空值
+							if (firstSet.get(tmpS).contains("@")) {
+								for (String s : firstSet.get(tmpS)) {
+									if (s.equals("@"))
 										continue;
 									firstSet.get(V).add(s);
 								}
 								continue;
-							}else{
-								flag1=1;
+							} else {
+								flag1 = 1;
 								break;
 							}
 						}
-						if(flag1==0){
+						if (flag1 == 0) {
 							firstSet.get(V).add("@");
 						}
 					}
 				}
-				if(startLength<firstSet.get(V).size()){
-					flag=1;
+				if (startLength < firstSet.get(V).size()) {
+					flag = 1;
 				}
 			}
 		}
@@ -159,14 +162,95 @@ public class GrammarAnalysis {
 
 	// 求follow集合
 	public void calculateFollowSet() {
+		followSet.get("S").add("#");// S为起始符号
+		for (String V : nonT) {
+			GrammarStruct gsv = grammarMap.get(V);
+			List<String> gsvRight = gsv.right;
+			for (int i = 0; i < gsvRight.size(); i++) {
+				String tmpRight = gsvRight.get(i);
+				String[] strs = tmpRight.split(" ");
+				int j = 0;
+				for (; j < strs.length - 1; j++) {
+					int flag1 = 0;
+					String str1 = strs[j];
+					int h = j + 1;
+					if (!nonT.contains(str1))
+						continue;
+					while (flag1 == 0 && h < strs.length) {
+						String str2 = strs[h];
+						h++;
+						if (nonT.contains(str2)) {
+							if (!firstSet.get(str2).contains("@")) {
+								followSet.get(str1).addAll(firstSet.get(str2));
+								flag1=1;
+							} else {
+								for (String str3 : firstSet.get(str2)) {
+									if (str3.equals("@")) {//除去空值
+										continue;
+									}
+									followSet.get(str1).add(str3);
+								}
+							}
+						} else {
+							followSet.get(str1).add(str2);
+							flag1 = 1;
+						}
+					}
+					if(flag1==0){//非终结符号str1后面全是非终结符，且他们的first集里面都含有空值@
+						followSet.get(str1).addAll(followSet.get(V));
+					}
+				}
+				if (nonT.contains(strs[j]))//一条文法最后一个符号为非终结符
+					followSet.get(strs[j]).addAll(followSet.get(V));
+			}
+		}
+	}
 
+	// 产生LL1语法分析表
+	public void createMTable() {
+		for(String V: nonT){
+			GrammarStruct gsv=grammarMap.get(V);
+			List<String> gsvRight=gsv.right;
+			
+			for(String right: gsvRight){
+				String[] strs=right.split(" ");
+				String str=strs[0];
+				if(nonT.contains(str)){
+					for(String s:firstSet.get(str)){
+						GrammarSingle gs=new GrammarSingle();
+						gs.left=V;
+						gs.right=right;
+						MtableKey mk=new MtableKey();
+						mk.V=V;
+						mk.T=s;
+						mTable.put(mk, gs);
+					}
+					if(firstSet.get(str).contains("@")){
+						for(String s: followSet.get(str)){
+							GrammarSingle gs=new GrammarSingle();
+							gs.left=V;
+							gs.right=right;
+							MtableKey mk=new MtableKey();
+							mk.V=V;
+							mk.T=s;
+							mTable.put(mk, gs);
+						}
+					}
+				}else{
+					GrammarSingle gs=new GrammarSingle();
+					gs.left=V;
+					gs.right=right;
+					MtableKey mk=new MtableKey();
+					mk.V=V;
+					mk.T=str;
+					mTable.put(mk, gs);
+				}
+			}
+		}
 	}
-	//产生LL1语法分析表
-	public void createMTable(){
-		
-	}
-	//分析具体的程序
-	public void analysisProgram(){
-		
+
+	// 分析具体的程序
+	public void analysisProgram() {
+
 	}
 }

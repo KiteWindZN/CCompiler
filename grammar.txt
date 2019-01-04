@@ -1,0 +1,29 @@
+S -> Type main() Block
+Type -> int | float | double | char | bool 
+Block ->{ stmts return Num ;}
+Decl -> Type Array ;
+Array ->Identifier [ Num ] |Identifier [ Identifier ]
+Stmts -> stmts  stmt |stmt
+Letter -> A|B|C|D|E|F|G|H|I|G|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z|a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|_
+Digit -> 0| Non-digit
+Non-digit -> 1|2|3|4|5|6|7|8|9
+Num -> Num Digit | Non-digit
+Identifier ->Identifier Digit |Identifier Letter | Letter
+Bool-value -> true|false
+self-op -> ++|--
+HLogic-op -> &&
+LLogic-op -> ||
+HMath-op -> *|/|%
+lMath-op -> +|-
+Judge-op -> ==|!=|>|>=|<|<=
+stmt -> Assignment ;|Decl |if ( Bool-value ) stmt | if ( Bool-value ) stmt else stmt | while ( Bool-value ) stmt | for ( Fora ; Forb ; fora ) stmt | { stmts }
+Fora -> Assignment | @
+Forb -> Bool-value | @
+Assignment -> Indetifier = Num ; | LArray self_op ;| self_op Indentifier;
+Factor -> ( Bool )|Array|Num|Bool-value | ! ( Bool )
+HExpr -> HExpr HMath-op Factor | Factor
+LExpr -> Lexpr LMath-op HExpr | HExpr
+Rel -> Rel Judge-op LExpr |LExpr
+HRel -> HRel HLogic-op Rel |Rel
+Bool -> Bool LLogic-op HRel | HRel
+
