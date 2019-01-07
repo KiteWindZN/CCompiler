@@ -20,6 +20,18 @@ public class Lexer {
 	int col = 0;
 	int index = 0;
 
+	public int getCol() {
+		return col;
+	}
+
+	public void setCol(int col) {
+		this.col = col;
+	}
+
+	public void setRow(int row) {
+		this.row = row;
+	}
+
 	public void reserve(Word t) {
 		words.put(t.lexeme, t);
 	}
@@ -412,5 +424,10 @@ public class Lexer {
 	//error
 	public void processError(int rowNum,int colNum,String errorMsg){
 		System.out.println("rowNum: "+rowNum+" , ColNum: "+colNum+" : "+errorMsg);
+	}
+
+	public String getRow() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

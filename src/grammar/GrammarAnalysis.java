@@ -13,6 +13,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
+
+import lexer.Cchar;
+import lexer.Cstring;
+import lexer.Decimal;
+import lexer.Lexer;
+import lexer.Num;
+import lexer.Word;
+import lexer.myToken;
 
 public class GrammarAnalysis {
 
@@ -20,8 +29,10 @@ public class GrammarAnalysis {
 	Map<String, List<String>> firstSet = new HashMap<String, List<String>>();
 	Map<String, List<String>> followSet = new HashMap<String, List<String>>();
 	Map<String, GrammarStruct> grammarMap = new HashMap<String, GrammarStruct>();
+	Stack<String> stack;
 	Set<String> nonT = new HashSet<String>();// 非终结符集合
 	// Set<String> T=new HashSet<String>();//终结符集合
+	Lexer lexer = new Lexer("program.c", 4096);
 
 	GrammarAnalysis(String fileName) throws IOException {
 		ReadGrammar readGrammar = new ReadGrammar();
@@ -107,6 +118,82 @@ public class GrammarAnalysis {
 	// 提取左公因子
 	public void extractLeftCommonFactor() {
 
+		// step1. sort
+		for (String V : nonT) {
+			GrammarStruct gsv = grammarMap.get(V);
+			List<String> gsvRight = gsv.right;
+			sortList(gsvRight);
+		}
+
+		// step2. extract
+		for (String V : nonT) {
+			// longest common sub prefix
+			GrammarStruct gsv = grammarMap.get(V);
+			List<String> gsvRight = gsv.right;
+			List<String> prefixList=new ArrayList<String>();
+			List<String> lastList=new ArrayList<String>();
+			int len=gsvRight.size();
+			if(len==1)
+				continue;
+			while(len>1){
+				int start=longestCommonPrefix(gsvRight, len, prefixList,lastList);
+				if(start>0){//has common prefix
+					String prefixS=prefixList.get(0);
+					for(int i=1;i<prefixList.size();i++){
+						prefixS+=" "+prefixList.get(i);
+					}
+					String newV=V+"1";
+					
+				}
+				len--;
+			}
+			// change grammarMap.get(V)
+
+			// add new v to nonT
+
+			// add new GrammarStruct to grammarMap
+		}
+	}
+
+	// fast sort
+	public void sortList(List<String> list) {
+
+	}
+
+	public int longestCommonPrefix(List<String> list, int end,List<String> resList,List<String> lastList) {
+		int start = 0;
+		int len = Integer.MAX_VALUE;
+		
+		List<List<String>> lists = new ArrayList<List<String>>();
+		for (int i = 0; i < end; i++) {
+			String str = list.get(i);
+			String[] strs = str.trim().split(" ");
+			if (len > strs.length)
+				len = strs.length;
+			List<String> tmpL = new ArrayList<String>();
+			for (String s : strs) {
+				tmpL.add(s);
+			}
+			lists.add(tmpL);
+		}
+
+		int flag = 0;
+		while (start < len && flag == 0) {
+			String str = lists.get(0).get(start);
+			for (int i = 1; i < lists.size(); i++) {
+				if (lists.get(i).get(start).equals(str)) {
+					continue;
+				} else {
+					flag = 1;
+					break;
+				}
+			}
+			if (flag == 0){
+				resList.add(str);
+				start++;
+			}
+		}
+		return start;
 	}
 
 	// 求first集合
@@ -182,10 +269,10 @@ public class GrammarAnalysis {
 						if (nonT.contains(str2)) {
 							if (!firstSet.get(str2).contains("@")) {
 								followSet.get(str1).addAll(firstSet.get(str2));
-								flag1=1;
+								flag1 = 1;
 							} else {
 								for (String str3 : firstSet.get(str2)) {
-									if (str3.equals("@")) {//除去空值
+									if (str3.equals("@")) {// 除去空值
 										continue;
 									}
 									followSet.get(str1).add(str3);
@@ -196,11 +283,11 @@ public class GrammarAnalysis {
 							flag1 = 1;
 						}
 					}
-					if(flag1==0){//非终结符号str1后面全是非终结符，且他们的first集里面都含有空值@
+					if (flag1 == 0) {// 非终结符号str1后面全是非终结符，且他们的first集里面都含有空值@
 						followSet.get(str1).addAll(followSet.get(V));
 					}
 				}
-				if (nonT.contains(strs[j]))//一条文法最后一个符号为非终结符
+				if (nonT.contains(strs[j]))// 一条文法最后一个符号为非终结符
 					followSet.get(strs[j]).addAll(followSet.get(V));
 			}
 		}
@@ -208,41 +295,41 @@ public class GrammarAnalysis {
 
 	// 产生LL1语法分析表
 	public void createMTable() {
-		for(String V: nonT){
-			GrammarStruct gsv=grammarMap.get(V);
-			List<String> gsvRight=gsv.right;
-			
-			for(String right: gsvRight){
-				String[] strs=right.split(" ");
-				String str=strs[0];
-				if(nonT.contains(str)){
-					for(String s:firstSet.get(str)){
-						GrammarSingle gs=new GrammarSingle();
-						gs.left=V;
-						gs.right=right;
-						MtableKey mk=new MtableKey();
-						mk.V=V;
-						mk.T=s;
+		for (String V : nonT) {
+			GrammarStruct gsv = grammarMap.get(V);
+			List<String> gsvRight = gsv.right;
+
+			for (String right : gsvRight) {
+				String[] strs = right.split(" ");
+				String str = strs[0];
+				if (nonT.contains(str)) {
+					for (String s : firstSet.get(str)) {
+						GrammarSingle gs = new GrammarSingle();
+						gs.left = V;
+						gs.right = right;
+						MtableKey mk = new MtableKey();
+						mk.V = V;
+						mk.T = s;
 						mTable.put(mk, gs);
 					}
-					if(firstSet.get(str).contains("@")){
-						for(String s: followSet.get(str)){
-							GrammarSingle gs=new GrammarSingle();
-							gs.left=V;
-							gs.right=right;
-							MtableKey mk=new MtableKey();
-							mk.V=V;
-							mk.T=s;
+					if (firstSet.get(str).contains("@")) {
+						for (String s : followSet.get(str)) {
+							GrammarSingle gs = new GrammarSingle();
+							gs.left = V;
+							gs.right = right;
+							MtableKey mk = new MtableKey();
+							mk.V = V;
+							mk.T = s;
 							mTable.put(mk, gs);
 						}
 					}
-				}else{
-					GrammarSingle gs=new GrammarSingle();
-					gs.left=V;
-					gs.right=right;
-					MtableKey mk=new MtableKey();
-					mk.V=V;
-					mk.T=str;
+				} else {
+					GrammarSingle gs = new GrammarSingle();
+					gs.left = V;
+					gs.right = right;
+					MtableKey mk = new MtableKey();
+					mk.V = V;
+					mk.T = str;
 					mTable.put(mk, gs);
 				}
 			}
@@ -250,7 +337,118 @@ public class GrammarAnalysis {
 	}
 
 	// 分析具体的程序
-	public void analysisProgram() {
+	public void analysisProgram() throws IOException {
+		stack.push("#");
+		stack.push("S");// start sign
+		myToken token;
+		token = lexer.get_nextToken();
+		while (token != null) {
+			String V = stack.pop();
+			String T = "";
+			MtableKey mk = new MtableKey();
+
+			int tag = token.tag;
+			if (tag > 0 && tag < 257) {// char
+				System.out.println("< " + token.tag + " , " + (char) token.tag + " >");
+				T = "" + (char) token.tag;
+			} else if (tag < 310) {
+				Word word = (Word) token;
+				System.out.println("< " + word.tag + " , " + word.lexeme + " >");
+				T = word.lexeme;
+			} else {// constant
+				if (tag == 310) {
+					Num num = (Num) (token);// int
+					// System.out.println("< "+num.tag+" , "+num.value+" >");
+					T = "Num";
+				} else if (tag == 311) {// float and double
+					Decimal decimal = (Decimal) token;
+					// System.out.println("< "+decimal.tag+" ,
+					// "+decimal.getValue()+" >");
+					T = "Num";
+				} else if (tag == 312) {// String
+					Cstring cstring = (Cstring) token;
+					// System.out.println("< "+cstring.tag+" ,
+					// "+cstring.getValue()+" >");
+					T = "String";
+				} else if (tag == 313) {// char
+					Cchar cchar = (Cchar) token;
+					// System.out.println("< "+cchar.tag+" ,
+					// "+cchar.getValue()+" >");
+					T = "Char";
+				}
+			}
+
+			if (T.equals("#")) {
+				if (stack.size() == 0) {
+					if (V.equals("#")) {
+						System.out.println("GrammarAnalysis SUCCESS");
+						return;
+					}
+				}
+			}
+
+			mk.V = V;
+			mk.T = T;
+			if (mTable.containsKey(mk)) {
+				GrammarSingle gs = mTable.get(mk);
+				String gsRight = gs.right;
+				String[] strs = gsRight.split(" ");
+				if (strs.length == 1 || strs[0].equals("@"))
+					continue;
+				for (int i = strs.length - 1; i >= 0; i--) {
+					stack.push(strs[i].trim());
+				}
+			} else {
+				System.out.println("there must be something wrong in grammar, and the location is : row: "
+						+ lexer.getRow() + " ,column: " + lexer.getCol());
+				panicProcess();// error process wait to code
+			}
+		}
+	}
+
+	// error process
+	public void panicProcess() {
 
 	}
+
+	public Map<MtableKey, GrammarSingle> getmTable() {
+		return mTable;
+	}
+
+	public void setmTable(Map<MtableKey, GrammarSingle> mTable) {
+		this.mTable = mTable;
+	}
+
+	public Map<String, List<String>> getFirstSet() {
+		return firstSet;
+	}
+
+	public void setFirstSet(Map<String, List<String>> firstSet) {
+		this.firstSet = firstSet;
+	}
+
+	public Map<String, List<String>> getFollowSet() {
+		return followSet;
+	}
+
+	public void setFollowSet(Map<String, List<String>> followSet) {
+		this.followSet = followSet;
+	}
+
+	public Map<String, GrammarStruct> getGrammarMap() {
+		return grammarMap;
+	}
+
+	public void setGrammarMap(Map<String, GrammarStruct> grammarMap) {
+		this.grammarMap = grammarMap;
+	}
+
+	public Stack<String> getStack() {
+		return stack;
+	}
+
+	public void setStack(Stack<String> stack) {
+		this.stack = stack;
+	}
+
 }

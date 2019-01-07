@@ -14,3 +14,4 @@ if(a==30){
 }else a--;
 a--;
 int array[10];
+#

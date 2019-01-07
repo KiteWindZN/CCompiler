@@ -2,6 +2,7 @@ package lexer;
 
 public class Tag {
 	
+	//key word1
 	public final static int TRUE=258;
 	public final static int FALSE=259;
 	public final static int INT=260;
@@ -28,6 +29,7 @@ public class Tag {
 	public final static int DEFAULT=281;
 	public final static int DEFINE=282;
 	
+	//operator
 	public final static int INCREASE=283;
 	public final static int DECREASE=284;
 	public final static int NOTBIGGER=285;
@@ -40,11 +42,15 @@ public class Tag {
 	public final static int EXPLAIN2START=292;
 	public final static int EXPLAIN2END=293;
 	
+	//key word2
 	public final static int STATIC=294;
 	public final static int FINAL=295;
 	public final static int CONST=296;
+	
+	//Indentifier
 	public final static int ID=297;
 	
+	//Num
 	public final static int NUM=310;
 	public final static int Decimal=311;
 	public final static int CSTRING=312;

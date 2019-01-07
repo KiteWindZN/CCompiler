@@ -354,4 +354,20 @@ public class Lexical {
 		System.out.println();
 		System.out.println("Success");
 	}
+	
+	public int getRow() {
+		return row;
+	}
+
+	public void setRow(int row) {
+		this.row = row;
+	}
+
+	public int getCol() {
+		return col;
+	}
+
+	public void setCol(int col) {
+		this.col = col;
+	}
 }
