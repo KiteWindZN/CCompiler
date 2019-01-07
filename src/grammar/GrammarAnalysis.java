@@ -130,40 +130,83 @@ public class GrammarAnalysis {
 			// longest common sub prefix
 			GrammarStruct gsv = grammarMap.get(V);
 			List<String> gsvRight = gsv.right;
-			List<String> prefixList=new ArrayList<String>();
-			List<String> lastList=new ArrayList<String>();
-			int len=gsvRight.size();
-			if(len==1)
+			List<String> prefixList = new ArrayList<String>();
+			List<String> lastList = new ArrayList<String>();
+			int len = gsvRight.size();
+			if (len == 1)
 				continue;
-			while(len>1){
-				int start=longestCommonPrefix(gsvRight, len, prefixList,lastList);
-				if(start>0){//has common prefix
-					String prefixS=prefixList.get(0);
-					for(int i=1;i<prefixList.size();i++){
-						prefixS+=" "+prefixList.get(i);
+			int start1 = 0;
+			while (start1 < gsvRight.size()) {
+				len = gsvRight.size();
+				while (len > 1) {
+					int start2 = longestCommonPrefix(start1, gsvRight, len, prefixList, lastList);
+					if (start2 > 0) {// has common prefix
+						String prefixS = prefixList.get(0);
+						for (int i = 1; i < prefixList.size(); i++) {
+							prefixS += " " + prefixList.get(i);
+						}		
+						// change grammarMap.get(V)
+						int tmpLen = len;
+						while (tmpLen > 0) {
+							gsvRight.remove(start1);
+							tmpLen--;
+						}
+						String newV = V + "1";
+						String newRight = prefixS + " " + newV;
+						gsvRight.add(start1, newRight);
+						nonT.add(newV);// add new v to nonT
+						GrammarStruct gs=new GrammarStruct();
+						// add new GrammarStruct to grammarMap
+						gs.left=newV;
+						List<String> myRight=new ArrayList<String>();
+						for(int i=0;i<lastList.size();i++){
+							myRight.add(lastList.get(i));
+						}
+						gs.right=myRight;
+						grammarMap.put(newV, gs);
+						break;
 					}
-					String newV=V+"1";
-					
+					len--;
 				}
-				len--;
-			}
-			// change grammarMap.get(V)
-
-			// add new v to nonT
-
-			// add new GrammarStruct to grammarMap
+			}			
 		}
 	}
 
 	// fast sort
 	public void sortList(List<String> list) {
-
+		int len=list.size();
+		fastSort(list,0,len);
+	}
+	
+	public void fastSort(List<String> list,int start,int end){
+		if(start>=end)
+			return;
+		String str=list.get(start);
+		int i=start;
+		int j=end;
+		//start++;
+		//end--;
+		while(start<end){
+			while(list.get(++start).compareTo(str)<=0);
+			while(list.get(--end).compareTo(str)>=0);
+			if(start<end){
+				String tmp=list.get(start);
+				list.set(start, list.get(end));
+				list.set(end, tmp);
+			}	
+		}
+		int k=end;
+		list.set(i, list.get(k));
+		list.set(k, str);
+		
+		fastSort(list,i,k-1);
+		fastSort(list,k+1,j);
 	}
 
-	public int longestCommonPrefix(List<String> list, int end,List<String> resList,List<String> lastList) {
-		int start = 0;
+	public int longestCommonPrefix(int start, List<String> list, int end, List<String> resList,
+			List<String> lastList) {
 		int len = Integer.MAX_VALUE;
-		
+
 		List<List<String>> lists = new ArrayList<List<String>>();
 		for (int i = 0; i < end; i++) {
 			String str = list.get(i);
@@ -188,9 +231,22 @@ public class GrammarAnalysis {
 					break;
 				}
 			}
-			if (flag == 0){
+			if (flag == 0) {
 				resList.add(str);
 				start++;
+			}
+		}
+		if (start != 0) {
+			for (int i = 0; i < end; i++) {
+				List<String> tmpL = new ArrayList<String>();
+				List<String> list1 = lists.get(i);
+				String lastS="";
+				for (int j = start; j < list1.size(); j++) {
+					lastS+=list1.get(j)+" ";
+				}
+				if (start == list1.size())
+					lastS="@";
+				lastList.add(lastS);
 			}
 		}
 		return start;
